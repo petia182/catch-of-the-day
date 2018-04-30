@@ -1,60 +1,61 @@
-import React from 'react';
-import Header from './Header';
-import Order from './Order';
-import sampleFishes from '../sample-fishes.js'
-import Inventory from './Inventory';
-import Fish from './Fish';
+import React from "react";
+import Header from "./Header";
+import Order from "./Order";
+import sampleFishes from "../sample-fishes.js";
+import Inventory from "./Inventory";
+import Fish from "./Fish";
+import base from "../base";
 
 class App extends React.Component {
-
   state = {
     fishes: {},
     order: {}
   };
 
-  addFish = (fish) => {
-     // 1. Ceate a copy of the fishes object
-     const fishes = {...this.state.fishes};
-     // 2. Add the fish into fishes
-     fishes[`fish${Date.now()}`] = fish
-     // 3. Update state
-     this.setState({
-       fishes: fishes
-     })
+  componentDidMount() {
+    const { params } = this.props.match;
+    this.ref = base.syncState(`${params.storeId}/fishes`, {
+      context: this,
+      state: "fishes"
+    });
+  }
+
+  componentDidUpdate() {
+    localStorage.setItem(
+      this.props.match.params.storeId,
+      JSON.stringify(this.state.order)
+    );
+  }
+
+  componentWillUnmount() {
+    base.removeBinding(this.ref);
+  }
+
+  addFish = fish => {
+    // 1. Ceate a copy of the fishes object
+    const fishes = { ...this.state.fishes };
+    // 2. Add the fish into fishes
+    fishes[`fish${Date.now()}`] = fish;
+    // 3. Update state
+    this.setState({
+      fishes: fishes
+    });
   };
 
   loadSamplaFishes = () => {
-
     this.setState({
       fishes: sampleFishes
-    })
-
+    });
   };
 
-  addToOrder = (fishKey) => {
+  addToOrder = fishKey => {
+    const order = { ...this.state.order };
 
-    const order = {...this.state.order};
-
-    order[fishKey] === 1 ? order[fishKey] = order[fishKey] + 1 : order[fishKey] = 1
+    order[fishKey] = order[fishKey] + 1 || 1;
 
     this.setState({
       order
-    })
-  };
-
-  displayOrder = (fishKey) => {
-
-    const fish = this.state.order[fishKey];
-
-    return fish;
-
-    // const fish = {
-    //   name: this.state.order.fishKey.name,
-    //   price: this.state.order.fishKey.price
-    // }
-    //
-    // console.log(fish);
-    // return fish;
+    });
   };
 
   render() {
@@ -75,11 +76,16 @@ class App extends React.Component {
         </div>
         <Order
           addToOrder={this.addToOrder}
-          displayOrder={this.state.order.fish1} />
-        <Inventory addFish={this.addFish} loadSamplaFishes={this.loadSamplaFishes}/>
+          fishes={this.state.fishes}
+          order={this.state.order}
+        />
+        <Inventory
+          addFish={this.addFish}
+          loadSamplaFishes={this.loadSamplaFishes}
+        />
       </div>
-    )
-  };
+    );
+  }
 }
 
 export default App;
